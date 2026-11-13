@@ -11,10 +11,10 @@ import { SessionContent, SignalrService } from './signalr.service';
       @if (error()) { <p class="viewer-message" role="alert">{{ error() }}</p> }
       @else if (content(); as session) {
         <div class="shared-text">{{ session.text }}</div>
-        @if (!session.text) { <p class="viewer-message">Még nincs megjeleníthető szöveg.</p> }
-      } @else { <p class="viewer-message" role="status">Session betöltése…</p> }
+        @if (!session.text) { <p class="viewer-message">No text to display yet.</p> }
+      } @else { <p class="viewer-message" role="status">Loading session…</p> }
       @if (content() && signalr.connectionState() !== 'Connected') {
-        <p class="connection-notice" role="status">A kapcsolat megszakadt. Újracsatlakozás…</p>
+        <p class="connection-notice" role="status">Connection lost. Reconnecting…</p>
       }
     </main>
   `,
@@ -41,12 +41,12 @@ export class SessionViewer {
       this.error.set('');
       const encodedKey = new URLSearchParams(fragment ?? '').get('key');
       if (!encodedKey) {
-        this.error.set('Hiányzó titkosítási kulcs a session URL-ben.');
+        this.error.set('The session URL is missing the encryption key.');
         return;
       }
       const key = this.cryptography.importKey(encodedKey);
       void key.catch(() => {
-        if (active) this.error.set('Érvénytelen titkosítási kulcs.');
+        if (active) this.error.set('Invalid encryption key.');
       });
       const accept = async (content: SessionContent): Promise<void> => {
         if (!active || content.id !== id || content.revision < revision) return;
@@ -61,16 +61,16 @@ export class SessionViewer {
             this.error.set('');
           }
         } catch {
-          console.error('A fogadott üzenet visszafejtése sikertelen.');
+          console.error('Failed to decrypt the received message.');
           if (active && content.revision === revision) {
-            this.error.set('Az üzenet nem fejthető vissza. Ellenőrizd a session URL kulcsát.');
+            this.error.set('Could not decrypt the message. Check the key in the session URL.');
           }
         }
       };
       const removeHandler = this.signalr.onSessionUpdated(content => { void accept(content); });
       if (connected) {
         void this.signalr.joinSession(id).then(accept).catch(() => {
-          if (active) this.error.set('A session nem található vagy már nem érhető el.');
+          if (active) this.error.set('The session was not found or is no longer available.');
         });
       }
       onCleanup(() => {

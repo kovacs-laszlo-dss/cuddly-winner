@@ -10,14 +10,14 @@ import { SignalrService, SessionCreated } from './signalr.service';
     <main class="editor-shell">
       <section class="panel">
         <div class="panel-heading"><h2>Secure Live Messaging</h2>
-          <span class="status" [class.online]="connected()" role="status">{{ connected() ? 'Kapcsolódva' : 'Kapcsolódás…' }}</span></div>
+          <span class="status" [class.online]="connected()" role="status">{{ connected() ? 'Connected' : 'Connecting…' }}</span></div>
         @if (session()) {
           <label for="session-url">Session URL</label>
           <div class="share-row session-link"><input id="session-url" readonly [value]="sessionUrl()" (focus)="$any($event.target).select()">
-            <button class="secondary" (click)="copyLink()">{{ copied() ? 'Másolva' : 'Link másolása' }}</button></div>
+            <button class="secondary" (click)="copyLink()">{{ copied() ? 'Copied' : 'Copy link' }}</button></div>
         }
-        <label for="session-text">Megjelenítendő szöveg</label>
-        <textarea id="session-text" [ngModel]="text" (ngModelChange)="onTextChange($event)" rows="18" placeholder="Ide írd a megosztani kívánt szöveget…"></textarea>
+        <label for="session-text">Text to share</label>
+        <textarea id="session-text" [ngModel]="text" (ngModelChange)="onTextChange($event)" rows="18" placeholder="Type the text you want to share…"></textarea>
       </section>
       @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
     </main>
@@ -68,7 +68,7 @@ export class SessionEditor {
       void this.flushUpdates();
     } catch {
       if (!this.destroyed) {
-        this.error.set('A session létrehozása nem sikerült. Újrapróbálkozás…');
+        this.error.set('Could not create the session. Retrying…');
         this.retryTimer = setTimeout(() => { void this.createSession(); }, 5000);
       }
     } finally {
@@ -96,7 +96,7 @@ export class SessionEditor {
       }
     } catch {
       if (!this.destroyed) {
-        this.error.set('A szöveg küldése nem sikerült. Újrapróbálkozás…');
+        this.error.set('Could not send the text. Retrying…');
         this.updateRetryTimer = setTimeout(() => { void this.flushUpdates(); }, 5000);
       }
     } finally {
@@ -109,7 +109,7 @@ export class SessionEditor {
       await navigator.clipboard.writeText(this.sessionUrl());
       this.copied.set(true);
     } catch {
-      this.error.set('A linket jelöld ki és másold ki a mezőből.');
+      this.error.set('Select and copy the link from the field.');
     }
   }
 }

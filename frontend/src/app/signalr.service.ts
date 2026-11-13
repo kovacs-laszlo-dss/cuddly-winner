@@ -30,7 +30,7 @@ export class SignalrService {
   readonly lastServerTime = this.serverTime.asReadonly();
 
   constructor() {
-    this.connection.on('SessionUpdated', () => console.log('Üzenet fogadva.'));
+    this.connection.on('SessionUpdated', () => console.log('Message received.'));
     this.connection.on('Connected', (serverTime: string) => this.serverTime.set(serverTime));
     this.connection.onreconnecting(() => this.state.set(HubConnectionState.Reconnecting));
     this.connection.onreconnected(() => this.state.set(HubConnectionState.Connected));
@@ -73,7 +73,7 @@ export class SignalrService {
 
   async joinSession(id: string): Promise<SessionContent> {
     const content = await this.connection.invoke<SessionContent>('JoinSession', id);
-    console.log('Session aktuális üzenete fogadva.');
+    console.log('Current session message received.');
     return content;
   }
 
@@ -83,7 +83,7 @@ export class SignalrService {
 
   async updateSession(id: string, editKey: string, text: Uint8Array): Promise<SessionContent> {
     const content = await this.connection.invoke<SessionContent>('UpdateSession', id, editKey, text);
-    console.log('Üzenet elküldve.');
+    console.log('Message sent.');
     return content;
   }
 

@@ -31,11 +31,11 @@ public sealed class ApplicationHub(SessionStore sessions, ILogger<ApplicationHub
 
     public async Task<SessionContent> UpdateSession(string id, string editKey, byte[] text)
     {
-        logger.LogInformation("Üzenet érkezett.");
+        logger.LogInformation("Message received.");
         var content = sessions.Update(id, editKey, text)
             ?? throw new HubException("A session nem található vagy nem szerkeszthető.");
         await Clients.Group(id).SessionUpdated(content);
-        logger.LogInformation("Üzenet továbbítva.");
+        logger.LogInformation("Message forwarded.");
         return content;
     }
 }
