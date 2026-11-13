@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SignalrService } from './signalr.service';
+import { SignalrService } from '../services/signalr.service';
 
 @Component({
   selector: 'app-root',

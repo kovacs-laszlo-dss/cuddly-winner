@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
-import { CryptographyService } from './cryptography.service';
+import { CryptographyService } from '../services/cryptography.service';
 import { FormsModule } from '@angular/forms';
-import { SignalrService, SessionCreated } from './signalr.service';
+import { SignalrService, SessionCreated } from '../services/signalr.service';
 
 @Component({
   selector: 'app-session-editor',

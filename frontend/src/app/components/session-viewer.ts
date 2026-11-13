@@ -1,8 +1,8 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { combineLatest } from 'rxjs';
-import { CryptographyService } from './cryptography.service';
+import { CryptographyService } from '../services/cryptography.service';
 import { ActivatedRoute } from '@angular/router';
-import { SessionContent, SignalrService } from './signalr.service';
+import { SessionContent, SignalrService } from '../services/signalr.service';
 
 @Component({
   selector: 'app-session-viewer',
