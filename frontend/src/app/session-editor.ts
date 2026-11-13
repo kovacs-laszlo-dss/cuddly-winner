@@ -1,4 +1,5 @@
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import { CryptographyService } from './cryptography.service';
 import { FormsModule } from '@angular/forms';
 import { SignalrService, SessionCreated } from './signalr.service';
 
@@ -25,9 +26,12 @@ import { SignalrService, SessionCreated } from './signalr.service';
 })
 export class SessionEditor {
   private readonly signalr = inject(SignalrService);
+  private readonly cryptography = inject(CryptographyService);
+  private readonly encryptionKey = signal('');
+  private key?: CryptoKey;
   readonly connected = computed(() => this.signalr.connectionState() === 'Connected');
   readonly session = signal<SessionCreated | null>(null);
-  readonly sessionUrl = computed(() => this.session() ? `${location.origin}/session/${this.session()!.id}` : '');
+  readonly sessionUrl = computed(() => this.session() ? `${location.origin}/session/${this.session()!.id}#key=${this.encryptionKey()}` : '');
   readonly copied = signal(false);
   readonly error = signal('');
   text = '';
@@ -57,6 +61,9 @@ export class SessionEditor {
     clearTimeout(this.retryTimer);
     this.creating = true;
     try {
+      const encodedKey = await this.cryptography.generateKey();
+      this.key = await this.cryptography.importKey(encodedKey);
+      this.encryptionKey.set(encodedKey);
       this.session.set(await this.signalr.createSession());
       this.error.set('');
       void this.flushUpdates();
@@ -83,7 +90,8 @@ export class SessionEditor {
     try {
       const session = this.session()!;
       while (!this.destroyed && this.connected() && this.pendingUpdates.length) {
-        await this.signalr.updateSession(session.id, session.editKey, this.pendingUpdates[0]);
+        const encrypted = await this.cryptography.encrypt(this.pendingUpdates[0], this.key!);
+        await this.signalr.updateSession(session.id, session.editKey, encrypted);
         this.pendingUpdates.shift();
         this.error.set('');
       }

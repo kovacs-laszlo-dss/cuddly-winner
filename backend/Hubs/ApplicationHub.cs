@@ -31,8 +31,6 @@ public sealed class ApplicationHub(SessionStore sessions) : Hub<IApplicationClie
 
     public async Task<SessionContent> UpdateSession(string id, string editKey, string text)
     {
-        if (text is null || text.Length > 10000)
-            throw new HubException("Legfeljebb 10 000 karakter adható meg.");
         var content = sessions.Update(id, editKey, text)
             ?? throw new HubException("A session nem található vagy nem szerkeszthető.");
         await Clients.Group(id).SessionUpdated(content);

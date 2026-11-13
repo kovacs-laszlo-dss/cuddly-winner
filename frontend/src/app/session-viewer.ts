@@ -1,4 +1,6 @@
-import { Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { combineLatest } from 'rxjs';
+import { CryptographyService } from './cryptography.service';
 import { ActivatedRoute } from '@angular/router';
 import { SessionContent, SignalrService } from './signalr.service';
 
@@ -23,41 +25,61 @@ export class SessionViewer {
   readonly error = signal('');
   private readonly route = inject(ActivatedRoute);
 
+  private readonly cryptography = inject(CryptographyService);
+
   constructor() {
-    // Route parameters are observed so navigating between session URLs also works.
-    const id = signal(this.route.snapshot.paramMap.get('id')!);
-    const subscription = this.route.paramMap.subscribe(params => id.set(params.get('id')!));
-    const removeHandler = this.signalr.onSessionUpdated(content => {
-      if (content.id === id()) this.accept(content);
+    const route = signal({ id: this.route.snapshot.paramMap.get('id')!, fragment: this.route.snapshot.fragment });
+    const subscription = combineLatest([this.route.paramMap, this.route.fragment]).subscribe(([params, fragment]) => {
+      route.set({ id: params.get('id')!, fragment });
     });
     effect(onCleanup => {
-      const sessionId = id();
-      if (this.signalr.connectionState() !== 'Connected') return;
+      const { id, fragment } = route();
+      const connected = this.signalr.connectionState() === 'Connected';
       let active = true;
+      let revision = -1;
+      this.content.set(null);
       this.error.set('');
-      if (untracked(this.content)?.id !== sessionId) this.content.set(null);
-      void this.signalr.joinSession(sessionId).then(content => {
-        if (active) this.accept(content);
-      }).catch(() => {
-        if (active) this.error.set('A session nem található vagy már nem érhető el.');
+      const encodedKey = new URLSearchParams(fragment ?? '').get('key');
+      if (!encodedKey) {
+        this.error.set('Hiányzó titkosítási kulcs a session URL-ben.');
+        return;
+      }
+      const key = this.cryptography.importKey(encodedKey);
+      void key.catch(() => {
+        if (active) this.error.set('Érvénytelen titkosítási kulcs.');
       });
+      const accept = async (content: SessionContent): Promise<void> => {
+        if (!active || content.id !== id || content.revision < revision) return;
+        revision = content.revision;
+        try {
+          const imported = await key;
+          // Revision zero is the server's empty, newly created session.
+          const text = content.revision === 0 && content.text === ''
+            ? '' : await this.cryptography.decrypt(content.text, imported);
+          if (active && content.revision === revision) {
+            this.content.set({ ...content, text });
+            this.error.set('');
+          }
+        } catch {
+          if (active && content.revision === revision) {
+            this.error.set('Az üzenet nem fejthető vissza. Ellenőrizd a session URL kulcsát.');
+          }
+        }
+      };
+      const removeHandler = this.signalr.onSessionUpdated(content => { void accept(content); });
+      if (connected) {
+        void this.signalr.joinSession(id).then(accept).catch(() => {
+          if (active) this.error.set('A session nem található vagy már nem érhető el.');
+        });
+      }
       onCleanup(() => {
         active = false;
-        if (this.signalr.connectionState() === 'Connected') {
-          void this.signalr.leaveSession(sessionId).catch(() => {});
+        removeHandler();
+        if (connected && this.signalr.connectionState() === 'Connected') {
+          void this.signalr.leaveSession(id).catch(() => {});
         }
       });
     });
-    inject(DestroyRef).onDestroy(() => {
-      subscription.unsubscribe();
-      removeHandler();
-    });
-  }
-
-  private accept(content: SessionContent): void {
-    const current = this.content();
-    if (!current || current.id !== content.id || content.revision >= current.revision) {
-      this.content.set(content);
-    }
+    inject(DestroyRef).onDestroy(() => subscription.unsubscribe());
   }
 }
