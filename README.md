@@ -38,6 +38,40 @@ Open <http://localhost:4200>. The Angular development server proxies SignalR req
 
 Changes made while disconnected are queued and sent after reconnecting. Viewers receive the latest stored message when joining or reconnecting. Sessions are kept in backend memory and disappear when the backend restarts. Reloading the sender page creates a new session.
 
+## End-to-end tests
+
+Playwright tests use two separate Chromium browsers for sending and receiving. From the repository root, install the test dependencies and browser:
+
+```sh
+cd frontend/e2e
+npm ci
+npx playwright install chromium
+```
+
+Run all tests in headless mode:
+
+```sh
+npm test
+```
+
+Run with visible browser windows to watch the sender and receiver:
+
+```sh
+npm run test:headed
+```
+
+The tests automatically build and start a separate backend on port 5258, then stop it when finished. Leave that port free; no manual server startup is required.
+
+Results are saved under `frontend/e2e/report/`. The HTML summary is generated at `report/html/index.html`, and screenshots, traces, videos and browser diagnostics for every test are stored in `report/test-results/` and attached to the HTML report.
+
+To open the HTML test report from `frontend/e2e`:
+
+```sh
+npm run report
+```
+
+See [frontend/e2e/README.md](frontend/e2e/README.md) for test coverage and further details.
+
 ## Message delivery
 
 - `CryptographyService` generates a random AES-256-GCM key for each session using the Web Crypto API. The key is shared through the URL fragment (`/session/:id#key=...`), which is not sent to the server.
