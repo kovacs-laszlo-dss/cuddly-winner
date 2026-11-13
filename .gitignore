@@ -1,4 +1,7 @@
 ### C#
+# Generated Angular files hosted by the backend
+/backend/frontend/
+
 # Build results
 [Bb]in/
 [Oo]bj/

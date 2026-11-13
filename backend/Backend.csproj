@@ -4,6 +4,22 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <FrontendRoot>$(MSBuildProjectDirectory)/../frontend/</FrontendRoot>
+    <FrontendDist>$(FrontendRoot)dist/frontend/browser/</FrontendDist>
+    <DefaultItemExcludes>$(DefaultItemExcludes);frontend/**</DefaultItemExcludes>
   </PropertyGroup>
+
+  <Target Name="BuildFrontend" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec WorkingDirectory="$(FrontendRoot)" Command="npm ci" Condition="!Exists('$(FrontendRoot)node_modules')" />
+    <Exec WorkingDirectory="$(FrontendRoot)" Command="npm run build" />
+    <RemoveDir Directories="$(MSBuildProjectDirectory)/frontend" />
+    <ItemGroup>
+      <FrontendFiles Include="$(FrontendDist)**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FrontendFiles)" DestinationFiles="@(FrontendFiles->'$(MSBuildProjectDirectory)/frontend/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <ItemGroup>
+      <Content Include="frontend/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
 
 </Project>
