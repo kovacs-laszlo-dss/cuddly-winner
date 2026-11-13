@@ -1,6 +1,17 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 
+export interface SessionContent {
+  id: string;
+  text: string;
+  revision: number;
+}
+
+export interface SessionCreated {
+  id: string;
+  editKey: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SignalrService {
   private readonly connection = new HubConnectionBuilder()
@@ -51,6 +62,27 @@ export class SignalrService {
     const serverTime = await this.connection.invoke<string>('Ping');
     this.serverTime.set(serverTime);
     return serverTime;
+  }
+
+  createSession(): Promise<SessionCreated> {
+    return this.connection.invoke('CreateSession');
+  }
+
+  joinSession(id: string): Promise<SessionContent> {
+    return this.connection.invoke('JoinSession', id);
+  }
+
+  leaveSession(id: string): Promise<void> {
+    return this.connection.invoke('LeaveSession', id);
+  }
+
+  updateSession(id: string, editKey: string, text: string): Promise<SessionContent> {
+    return this.connection.invoke('UpdateSession', id, editKey, text);
+  }
+
+  onSessionUpdated(handler: (content: SessionContent) => void): () => void {
+    this.connection.on('SessionUpdated', handler);
+    return () => this.connection.off('SessionUpdated', handler);
   }
 
   private scheduleRetry(): void {

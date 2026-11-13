@@ -1,1 +1,32 @@
-/* You can add global styles to this file, and also import other style files */
+:root { font-family: Inter, "Segoe UI", sans-serif; color: #182c31; background: #f3f6f5; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input, textarea { font: inherit; }
+.editor-shell { max-width: 1200px; margin: 0 auto; padding: 24px; }
+h2 { font-size: 18px; margin: 0 0 16px; }
+p { line-height: 1.6; color: #52656a; }
+.panel { background: white; border: 1px solid #dde6e2; border-radius: 16px; padding: 28px; margin-bottom: 20px; box-shadow: 0 8px 28px #16392b05; }
+.panel-heading, .editor-actions, .share-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.panel-heading { margin-bottom: 18px; }
+.panel-heading h2 { margin: 0; }
+.status { font-size: 12px; color: #736334; background: #fff6db; padding: 6px 10px; border-radius: 20px; }
+.status.online { color: #23634b; background: #e8f4ed; }
+label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+textarea, input { width: 100%; border: 1px solid #c8d6d0; border-radius: 8px; padding: 14px; background: #fbfdfc; color: inherit; }
+textarea { resize: vertical; line-height: 1.6; min-height: 55dvh; }
+textarea:focus, input:focus, button:focus-visible, a:focus-visible { outline: 3px solid #94c7b6; outline-offset: 3px; }
+.editor-actions { margin-top: 16px; }
+.session-link { margin-bottom: 24px; }
+.muted { font-size: 12px; color: #657972; }
+button { border: 0; border-radius: 8px; background: #235f4d; color: white; font-weight: 600; padding: 12px 18px; cursor: pointer; }
+button:hover { background: #194c3c; }
+button:disabled { opacity: .5; cursor: default; }
+.secondary { background: #e8f1ed; color: #235f4d; white-space: nowrap; }
+.secondary:hover { background: #d8e8e0; }
+a { display: inline-block; margin-top: 16px; color: #235f4d; font-size: 14px; }
+.error { color: #a62c37; }
+.viewer-shell { min-height: 100dvh; background: #fff; padding: clamp(24px, 7vw, 100px); display: grid; align-content: center; }
+.shared-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: clamp(28px, 5vw, 64px); line-height: 1.4; }
+.viewer-message { text-align: center; }
+.connection-notice { position: fixed; bottom: 16px; left: 16px; right: 16px; text-align: center; font-size: 13px; background: #fff6db; padding: 10px; border-radius: 8px; }
+@media (max-width: 600px) { .editor-shell { padding: 32px 16px; } .panel { padding: 20px; } .share-row, .editor-actions { flex-direction: column; align-items: stretch; } }

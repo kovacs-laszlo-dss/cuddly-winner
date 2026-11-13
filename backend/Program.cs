@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 });
 
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<SessionStore>();
 
 var app = builder.Build();
 
