@@ -1,9 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { SignalrService } from './signalr.service';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
   template: '<router-outlet />',
 })
-export class App {}
+export class App {
+  constructor() {
+    void inject(SignalrService).start();
+  }
+}
