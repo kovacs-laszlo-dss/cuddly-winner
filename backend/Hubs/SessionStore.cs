@@ -1,9 +1,17 @@
 using System.Collections.Concurrent;
+using MessagePack;
 
 namespace Backend.Hubs;
 
-public sealed record SessionContent(string Id, string Text, long Revision);
-public sealed record SessionCreated(string Id, string EditKey);
+[MessagePackObject]
+public sealed record SessionContent(
+    [property: Key("id")] string Id,
+    [property: Key("text")] byte[] Text,
+    [property: Key("revision")] long Revision);
+[MessagePackObject]
+public sealed record SessionCreated(
+    [property: Key("id")] string Id,
+    [property: Key("editKey")] string EditKey);
 
 public sealed class SessionStore
 {
@@ -14,13 +22,13 @@ public sealed class SessionStore
     {
         var id = Guid.NewGuid().ToString("N");
         var editKey = Guid.NewGuid().ToString("N");
-        sessions[id] = new Session(editKey, new SessionContent(id, "", 0));
+        sessions[id] = new Session(editKey, new SessionContent(id, [], 0));
         return new SessionCreated(id, editKey);
     }
 
     public SessionContent? Get(string id) => sessions.TryGetValue(id, out var session) ? session.Content : null;
 
-    public SessionContent? Update(string id, string editKey, string text)
+    public SessionContent? Update(string id, string editKey, byte[] text)
     {
         while (sessions.TryGetValue(id, out var session) && session.EditKey == editKey)
         {

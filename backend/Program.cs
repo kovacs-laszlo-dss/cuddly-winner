@@ -6,7 +6,8 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     WebRootPath = "frontend"
 });
 
-builder.Services.AddSignalR(options => options.MaximumReceiveMessageSize = null);
+builder.Services.AddSignalR(options => options.MaximumReceiveMessageSize = null)
+    .AddMessagePackProtocol();
 builder.Services.AddSingleton<SessionStore>();
 
 var app = builder.Build();

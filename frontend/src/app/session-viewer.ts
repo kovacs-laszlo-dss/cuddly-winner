@@ -21,7 +21,7 @@ import { SessionContent, SignalrService } from './signalr.service';
 })
 export class SessionViewer {
   readonly signalr = inject(SignalrService);
-  readonly content = signal<SessionContent | null>(null);
+  readonly content = signal<(Omit<SessionContent, 'text'> & { text: string }) | null>(null);
   readonly error = signal('');
   private readonly route = inject(ActivatedRoute);
 
@@ -54,13 +54,14 @@ export class SessionViewer {
         try {
           const imported = await key;
           // Revision zero is the server's empty, newly created session.
-          const text = content.revision === 0 && content.text === ''
+          const text = content.revision === 0 && content.text.length === 0
             ? '' : await this.cryptography.decrypt(content.text, imported);
           if (active && content.revision === revision) {
             this.content.set({ ...content, text });
             this.error.set('');
           }
         } catch {
+          console.error('A fogadott üzenet visszafejtése sikertelen.');
           if (active && content.revision === revision) {
             this.error.set('Az üzenet nem fejthető vissza. Ellenőrizd a session URL kulcsát.');
           }

@@ -1,9 +1,10 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { MessagePackHubProtocol } from '@microsoft/signalr-protocol-msgpack';
 
 export interface SessionContent {
   id: string;
-  text: string;
+  text: Uint8Array;
   revision: number;
 }
 
@@ -16,6 +17,7 @@ export interface SessionCreated {
 export class SignalrService {
   private readonly connection = new HubConnectionBuilder()
     .withUrl('/hubs/application')
+    .withHubProtocol(new MessagePackHubProtocol())
     .withAutomaticReconnect({ nextRetryDelayInMilliseconds: () => 5000 })
     .build();
   private readonly state = signal(HubConnectionState.Disconnected);
@@ -28,6 +30,7 @@ export class SignalrService {
   readonly lastServerTime = this.serverTime.asReadonly();
 
   constructor() {
+    this.connection.on('SessionUpdated', () => console.log('Üzenet fogadva.'));
     this.connection.on('Connected', (serverTime: string) => this.serverTime.set(serverTime));
     this.connection.onreconnecting(() => this.state.set(HubConnectionState.Reconnecting));
     this.connection.onreconnected(() => this.state.set(HubConnectionState.Connected));
@@ -68,16 +71,20 @@ export class SignalrService {
     return this.connection.invoke('CreateSession');
   }
 
-  joinSession(id: string): Promise<SessionContent> {
-    return this.connection.invoke('JoinSession', id);
+  async joinSession(id: string): Promise<SessionContent> {
+    const content = await this.connection.invoke<SessionContent>('JoinSession', id);
+    console.log('Session aktuális üzenete fogadva.');
+    return content;
   }
 
   leaveSession(id: string): Promise<void> {
     return this.connection.invoke('LeaveSession', id);
   }
 
-  updateSession(id: string, editKey: string, text: string): Promise<SessionContent> {
-    return this.connection.invoke('UpdateSession', id, editKey, text);
+  async updateSession(id: string, editKey: string, text: Uint8Array): Promise<SessionContent> {
+    const content = await this.connection.invoke<SessionContent>('UpdateSession', id, editKey, text);
+    console.log('Üzenet elküldve.');
+    return content;
   }
 
   onSessionUpdated(handler: (content: SessionContent) => void): () => void {

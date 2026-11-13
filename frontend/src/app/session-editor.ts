@@ -17,8 +17,7 @@ import { SignalrService, SessionCreated } from './signalr.service';
             <button class="secondary" (click)="copyLink()">{{ copied() ? 'Másolva' : 'Link másolása' }}</button></div>
         }
         <label for="session-text">Megjelenítendő szöveg</label>
-        <textarea id="session-text" [ngModel]="text" (ngModelChange)="onTextChange($event)" maxlength="10000" rows="18" placeholder="Ide írd a megosztani kívánt szöveget…"></textarea>
-        <div class="editor-actions"><span class="muted">{{ text.length }} / 10 000 karakter</span></div>
+        <textarea id="session-text" [ngModel]="text" (ngModelChange)="onTextChange($event)" rows="18" placeholder="Ide írd a megosztani kívánt szöveget…"></textarea>
       </section>
       @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
     </main>

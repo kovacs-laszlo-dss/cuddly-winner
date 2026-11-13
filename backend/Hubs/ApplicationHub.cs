@@ -8,7 +8,7 @@ public interface IApplicationClient
     Task SessionUpdated(SessionContent content);
 }
 
-public sealed class ApplicationHub(SessionStore sessions) : Hub<IApplicationClient>
+public sealed class ApplicationHub(SessionStore sessions, ILogger<ApplicationHub> logger) : Hub<IApplicationClient>
 {
     public override async Task OnConnectedAsync()
     {
@@ -29,11 +29,13 @@ public sealed class ApplicationHub(SessionStore sessions) : Hub<IApplicationClie
 
     public Task LeaveSession(string id) => Groups.RemoveFromGroupAsync(Context.ConnectionId, id);
 
-    public async Task<SessionContent> UpdateSession(string id, string editKey, string text)
+    public async Task<SessionContent> UpdateSession(string id, string editKey, byte[] text)
     {
+        logger.LogInformation("Üzenet érkezett.");
         var content = sessions.Update(id, editKey, text)
             ?? throw new HubException("A session nem található vagy nem szerkeszthető.");
         await Clients.Group(id).SessionUpdated(content);
+        logger.LogInformation("Üzenet továbbítva.");
         return content;
     }
 }

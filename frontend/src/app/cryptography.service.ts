@@ -13,19 +13,23 @@ export class CryptographyService {
     return crypto.subtle.importKey('raw', bytes, 'AES-GCM', false, ['encrypt', 'decrypt']);
   }
 
-  async encrypt(text: string, key: CryptoKey): Promise<string> {
+  async encrypt(text: string, key: CryptoKey): Promise<Uint8Array<ArrayBuffer>> {
     // A fresh 96-bit nonce is required for every message, including retries.
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
-    return `v1.${this.encode(iv)}.${this.encode(new Uint8Array(ciphertext))}`;
+    // Binary format: version (1 byte), IV (12 bytes), ciphertext with GCM tag.
+    const payload = new Uint8Array(13 + ciphertext.byteLength);
+    payload[0] = 1;
+    payload.set(iv, 1);
+    payload.set(new Uint8Array(ciphertext), 13);
+    return payload;
   }
 
-  async decrypt(payload: string, key: CryptoKey): Promise<string> {
-    const [version, nonce, ciphertext, extra] = payload.split('.');
-    if (version !== 'v1' || !nonce || !ciphertext || extra !== undefined) throw new Error('Invalid encrypted message');
-    const iv = this.decode(nonce);
-    if (iv.length !== 12) throw new Error('Invalid nonce');
-    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, this.decode(ciphertext));
+  async decrypt(payload: Uint8Array, key: CryptoKey): Promise<string> {
+    if (!(payload instanceof Uint8Array) || payload.length < 29 || payload[0] !== 1) throw new Error('Invalid encrypted message');
+    const iv = new Uint8Array(payload.subarray(1, 13));
+    const ciphertext = new Uint8Array(payload.subarray(13));
+    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
     return new TextDecoder('utf-8', { fatal: true }).decode(plaintext);
   }
 
