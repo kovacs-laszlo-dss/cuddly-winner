@@ -110,6 +110,10 @@ Rate limiting would help reduce the impact of such attacks by restricting the nu
 ## Tests and how to run them
 
 For client-side testing, I chose Microsoft's Playwright testing framework.
+Client-side testing could be further extended with frontend unit tests. However, at this stage, I believe that end-user testing is sufficient for this use case.
+- In the production environment, testing could be further complemented by:
+- Penetration testing
+- Performance testing
 
 ## Known limitations and what you would improve with more time
 
